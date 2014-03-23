@@ -2,7 +2,7 @@
 %%% Include records for Shopping cart and for Credit Card provider
 %% cover:compile_directory().
 
--include_lib("/usr/local/lib/erlang/lib/stdlib-1.19.4/include/ms_transform.hrl").
+-include_lib("stdlib/include/ms_transform.hrl").
 
 % Define timeout for receive block
 -define(TIMEOUT, 10000).
