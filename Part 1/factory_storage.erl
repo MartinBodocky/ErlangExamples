@@ -2,7 +2,7 @@
 %% Description : It saves collection of bought shopping carts and list of current processes
 -module(factory_storage).
 -include("factory.hrl").
--include_lib("/usr/local/lib/erlang/lib/stdlib-1.19.4/include/ms_transform.hrl").
+-include_lib("stdlib/include/ms_transform.hrl").
 
 -export([open_storage/0, terminate_storage/0, delete_storage/0, update_session/1, remove_session/1]).
 -export([get_session/1, get_session_userName/1, get_sessions/0, add_session/1, update_sessionList/1,
@@ -108,7 +108,7 @@ user_history(RefId) ->
 %% END - Client API
 
 %% START - Support functions
-get_sessions_int('$end_of_table') -> [];	
+get_sessions_int('$end_of_table') -> [];
 get_sessions_int(Key) ->
 	[SRef] = ets:lookup(factoryRam, Key),
 	[SRef | get_sessions_int(ets:next(factoryRam, Key))].
