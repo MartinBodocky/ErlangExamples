@@ -1,7 +1,7 @@
 -module(tests).
 -compile(export_all).
 -include("factory.hrl").
--include_lib("/usr/local/lib/erlang/lib/eunit-2.2.6/include/eunit.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 
 factory_supervisor2_test() ->
