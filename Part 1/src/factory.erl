@@ -31,106 +31,96 @@ warmup() ->
 start_link(UserName) ->
 	% Warm up factory process
 	warmup(),
-	call({add_user, UserName}).
+	call(?MODULE, {add_user, UserName}).
 
 -spec skateboard(string(),integer()) -> any().
 skateboard(RefId, Count) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	call(SessionPid, {add_item,{skateboard,Count}}).
 
 -spec surfboard(string(),integer()) -> any().
 surfboard(RefId, Count) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	call(SessionPid, {add_item,{surfboard,Count}}).
 
 -spec ski(string(),integer()) -> any().
 ski(RefId, Count) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	call(SessionPid, {add_item, {ski, Count}}).
 
 -spec bike(string(),integer()) -> any().
 bike(RefId, Count) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	call(SessionPid, {add_item, {bike, Count}}).
 
 -spec view_cart(string()) -> any().
 view_cart(RefId) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	Session = call(SessionPid, get_session),
 	print_list(Session#session.cart),
 	io:format("Total Price: ~p~n",[Session#session.price]).
 
 -spec get_session(string()) -> any().
 get_session(RefId) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	call(SessionPid, get_session).
 
 -spec billing_address(string(),list()) -> any().
 billing_address(RefId, Address) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	call(SessionPid, {add_billingAddress, Address}).
 
 -spec credit_card(integer(),string(),tuple()) -> any().
 credit_card(RefId, CardNumber, Expiration) ->
 	case is_integer(CardNumber) of
 		true ->
-			SessionPid = call({get_session_pid, RefId}),
+			SessionPid = call(?MODULE, {get_session_pid, RefId}),
 			call(SessionPid, {add_creditcard, CardNumber, Expiration});
 		_ -> {error, card_invalid}
 	end.
 
 -spec user_history(string()) -> any().
 user_history(RefId) ->
-	call({user_history, RefId}).
+	call(?MODULE, {user_history, RefId}).
 
 -spec buy(string()) -> any().
 buy(RefId) ->
-	SessionPid = call({get_session_pid, RefId}),
+	SessionPid = call(?MODULE, {get_session_pid, RefId}),
 	Session = call(SessionPid, get_session),
 	CartCount = get_cart_count(Session#session.cart),
 	if CartCount == 0 -> {error, empty_cart};
 		true ->
-			case call({buy, RefId, Session}) of
+			case call(?MODULE, {buy, RefId, Session}) of
 				{ok, TrxId} ->
 					%% save to history 
-					call({add_transaction, RefId, TrxId, erlang:localtime(), Session#session.cart, Session#session.price}),
+					call(?MODULE, {add_transaction, RefId, TrxId, erlang:localtime(), Session#session.cart, Session#session.price}),
 					%% delete session
 					call(SessionPid, delete),
 					%% delete in factory storage
-					call({remove_session, RefId}),
+					call(?MODULE, {remove_session, RefId}),
 					{ok, TrxId};
 				{error, Reason} -> {error, Reason}
 			end
 	end.
 
 stop() ->
-	call(stop).
+	call(?MODULE, stop).
 
 delete() ->
-	call(delete).
+	call(?MODULE, delete).
 
 get_allSessions() ->
-	call(all_sessions).
+	call(?MODULE, all_sessions).
 
 %% END - Client Service API
 
 %% START - Messaging functions
 
--spec call(tuple()) -> any().
-call(Request) ->
-	Ref = make_ref(),
-	?MODULE ! {request, {self(), Ref}, Request},
-	receive
-		{reply, Ref, Reply} -> Reply
-	after
-		?TIMEOUT -> {error, timeout}
-	end.
-
 -spec call(pid(), tuple()) -> any().
-call(SessionPid, Request) ->
+call(Pid, Request) ->
 	Ref = make_ref(),
 	%% we are calling session process
-	SessionPid ! {request, {self(), Ref}, Request},
+	Pid ! {request, {self(), Ref}, Request},
 	receive
 		{reply, Ref, Reply} -> Reply
 	after 
